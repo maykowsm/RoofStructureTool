@@ -75,9 +75,18 @@ class EstruturaTelhado():
 		for nomeFace in obj.Objetos[0][1]: #Passa na lista de subelementos celecionados
 			face = obj.Objetos[0][0].Shape.getElement(nomeFace)
 			normal = face.normalAt(0,0)
+			print("Normal:", normal)
 			list_extrusao.append(face.copy(True).extrude(FreeCAD.Vector(normal[0] * obj.Especura , normal[1] * obj.Especura , normal[2] * obj.Especura )))
 		
-		estrusao = Part.makeCompound(list_extrusao)
+		if len(list_extrusao) > 1:
+			estrusao = Part.Shape.fuse(list_extrusao[0],list_extrusao[1])
+			for forma in range(2, len(list_extrusao)):
+				nova_estrusao = Part.Shape.fuse(estrusao, list_extrusao[forma])
+				estrusao = nova_estrusao
+		else:
+			estrusao = list_extrusao[0]
+		
+		# Part.show(estrusao)
 
 
 		#------------------------------------------------------------------------
@@ -110,9 +119,9 @@ class EstruturaTelhado():
 			lista_rectangle.append(base_retangle.copy(True).translate(FreeCAD.Vector(0, -i * obj.Espacamento, 0)))
 		
 		group_ratengles =  Part.makeCompound(lista_rectangle)
-
+		# Part.show(group_ratengles)
 		cut_retangles = group_ratengles.extrude(FreeCAD.Vector(0,0, 2 * height_max)).translate(FreeCAD.Vector(0,0,-height_max))
-		
+		# Part.show(cut_retangles)
 		
 		#------------------------------------------------------------------------
 		#Desloca no plano e rotaciona as peças de corte 
@@ -120,7 +129,8 @@ class EstruturaTelhado():
 
 		#Posiciona o elemento de no centro do telhado
 		cut_retangles.translate(obj.Objetos[0][0].Shape.BoundBox.Center)
-		
+		# Part.show(cut_retangles)
+
 		#corta as peças
 		part = Part.Shape.common(estrusao, cut_retangles)
 
